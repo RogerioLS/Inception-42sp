@@ -1,0 +1,10 @@
+Caso voce tenha adicionado os arquivos com git add e depois
+dado commit mas percebeu que nao fez corretamente voce
+pode usar esse comandos:
+
+Você pode voltar o commit e manter as alterações no seu 
+diretório de trabalho (útil se quiser revisar):
+- git reset --soft HEAD~1
+
+Para remover os arquivos da área de staging (git add):
+git restore --staged srcs/
