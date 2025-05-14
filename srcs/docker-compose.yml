@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+    mariadb:
+    container_name: mariadb
+    image: mariadb
+    build: ./mariadb
+    networks:
+      inception-network:
+        ipv4_address: 172.18.0.2
+    volumes:
+      - mariadb-data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    restart: on-failure
