@@ -8,3 +8,199 @@ diretório de trabalho (útil se quiser revisar):
 
 Para remover os arquivos da área de staging (git add):
 git restore --staged srcs/
+
+📁 Estrutura Inicial
+Title: Criar Estrutura de Diretórios do Projeto
+Description:
+
+markdown
+Copy
+Edit
+- Criar a seguinte árvore de diretórios:
+  - /srcs/
+  - /srcs/requirements/
+    - mariadb/
+    - nginx/
+    - wordpress/
+    - tools/
+    - bonus/
+- Criar `Makefile` na raiz.
+- Criar `docker-compose.yml` dentro de `srcs/`.
+- Criar arquivo `.env` dentro de `srcs/`.
+- Atualizar `.gitignore` para ignorar `.env`.
+
+🐳 Docker Compose
+Title: Configurar Docker Compose (Redes e Volumes)
+Description:
+- Definir uma network customizada no docker-compose.yml.
+- Criar volume para persistência dos dados do MariaDB.
+- Criar volume para persistência dos arquivos do WordPress.
+- Garantir que containers usam apenas a network especificada.
+- Definir políticas de restart: always.
+
+🛢️ Serviço MariaDB
+Title: Implementar Serviço MariaDB
+
+O Maria db e um sistema de gerenciamento de banco de dados relacional ()
+
+Description:
+- Criar Dockerfile para MariaDB baseado em Alpine ou Debian.
+- Instalar MariaDB Server.
+- Configurar usuário administrador e usuário normal.
+- Nenhum dos usernames deve conter "admin" ou variações.
+- Usar scripts de inicialização para criação do banco.
+- Garantir que o processo rode como PID 1 (sem tail -f, sleep, etc).
+- Utilizar variáveis de ambiente para configurações sensíveis.
+
+✅ Explicação completa do porquê do MariaDB neste projeto:
+📌 O que é o MariaDB?
+MariaDB é um sistema de gerenciamento de banco de dados relacional, open-source e compatível com MySQL. Ele serve como backend para aplicações como o WordPress armazenarem dados de forma estruturada e persistente.
+
+🎯 Por que estamos usando MariaDB nesse projeto Inception?
+Porque o WordPress — a aplicação principal deste projeto — precisa de um banco de dados para:
+
+Armazenar usuários.
+Postagens, comentários, páginas.
+Metadados (como configurações de plugins, temas etc).
+
+➡️ O MariaDB entra como o coração de persistência do WordPress, mantendo tudo que não é arquivo.
+🧠 O que você deve entender tecnicamente:
+Conceito	                      Explicação
+Container isolado	              O MariaDB roda isolado, em um container dedicado, separado do WordPress.
+Comunicação via rede docker	    Os containers falam entre si por uma docker network (no caso, inception).
+Volume	                        Os dados da base ficam persistidos fora do container (ex: /home/login/data/mariadb).
+Variáveis de ambiente (.env)	  São usadas para passar user, password, db name etc., sem expor no Dockerfile.
+Scripts de inicialização	      São arquivos .sh ou .sql que criam usuários, banco etc., na primeira vez.
+Usuário administrador         	Deve ser criado com nome que não contenha "admin" ou "administrator", conforme exigência.
+Segurança	                      Sem senhas hardcoded. Nada de usar root sem necessidade.
+
+✅ 1. Checklist de Validação da Task "Implementar Serviço MariaDB"
+
+📋 **Checklist Técnico e Funcional**
+
+### 🔧 Estrutura e Configuração
+- Existe um diretório `requirements/mariadb` com:
+  - `Dockerfile`
+  - `conf/my.cnf`
+  - `tools/dbscript.sh`
+- Existe um `.env` na pasta `srcs/` com as seguintes variáveis:
+  - `MYSQL_ROOT_PASSWORD`
+  - `MYSQL_USER`
+  - `MYSQL_PASSWORD`
+  - `MYSQL_DATABASE` (opcional, mas recomendado)
+
+### 🐳 Dockerfile
+- A imagem base é Alpine ou Debian.
+- Instala `mariadb-server` corretamente.
+- Copia `my.cnf` para o local correto.
+- Copia e executa `dbscript.sh`.
+- Expõe a porta `3306`.
+- Usa `ENTRYPOINT` com `exec` e sem hacks como `tail -f` ou `sleep`.
+
+### 🔒 Segurança e Conformidade
+- Não há senha hardcoded nos arquivos `.sh` ou `Dockerfile`.
+- Senhas e configurações sensíveis estão no `.env`.
+- Nenhum nome de usuário inclui “admin” ou variações proibidas.
+- O processo principal roda como PID 1 com `exec`.
+
+### 📦 Docker Compose (opcional para este passo, mas recomendável)
+- O `docker-compose.yml` está pronto ou com o serviço `mariadb` corretamente configurado para testes.
+- Volume para persistência de dados está definido (`/var/lib/mysql`).
+- O container usa a rede `inception` e o nome `mariadb`.
+
+🧪 2. Como Testar se Está Tudo Certo
+🔌 **Passos para Testar MariaDB em Container**
+
+▶️ Executar o Build (caso ainda não tenha `docker-compose`)
+cd srcs
+docker build -t mariadb_test ./requirements/mariadb
+docker run --rm -it --env-file .env mariadb_test
+
+Isso serve para testar se o container inicializa corretamente e o banco é criado.
+
+▶️ Se já estiver com docker-compose.yml, use:
+docker-compose up --build mariadb
+
+💻 Conecte-se ao banco dentro do container:
+docker exec -it mariadb mariadb -u $MYSQL_USER -p
+# Digite a senha definida em .env (MYSQL_PASSWORD)
+
+🧾 Execute os comandos SQL para verificar:
+SHOW DATABASES;
+-- Deve mostrar "WordPress"
+
+SHOW GRANTS FOR 'rog_dev'@'%';
+-- Deve mostrar os privilégios do usuário
+
+🔐 Teste de acesso via root (se necessário):
+docker exec -it mariadb mariadb -u root -p$MYSQL_ROOT_PASSWORD
+
+Instalar MariaDB Server. #17
+Configurar usuário administrador e usuário normal. #18
+
+Nenhum dos usernames deve conter "admin" ou variações. #19
+
+Usar scripts de inicialização para criação do banco. #20
+Garantir que o processo rode como PID 1 (sem tail -f, sleep, etc). #21
+Utilizar variáveis de ambiente para configurações sensíveis. #22
+
+
+
+
+
+
+
+
+
+
+
+🧰 Serviço WordPress + PHP-FPM
+Title: Implementar Serviço WordPress + PHP-FPM
+Description:
+- Criar Dockerfile baseado em Alpine ou Debian.
+- Instalar php, php-fpm e extensões necessárias (php-mysql, etc).
+- Instalar WordPress manualmente na imagem.
+- Configurar php-fpm corretamente para servir o WordPress.
+- WordPress deve apontar para o container MariaDB.
+- Utilizar variáveis de ambiente para configuração de acesso ao banco.
+- Persistir os arquivos de WordPress no volume correto.
+
+🌐 Serviço NGINX
+Title: Implementar Serviço NGINX com HTTPS (TLSv1.2 ou TLSv1.3)
+Description:
+- Criar Dockerfile para Nginx baseado em Alpine ou Debian.
+- Instalar e configurar o Nginx.
+- Criar certificados SSL/TLS self-signed.
+- Configurar Nginx para escutar apenas na porta 443 com HTTPS.
+- Permitir apenas TLSv1.2 ou TLSv1.3 no server.
+- Redirecionar requisições para o PHP-FPM de WordPress (FastCGI).
+- Utilizar variáveis de ambiente para certs paths.
+
+🔒 Segurança Geral
+Title: Implementar Segurança: Portas, Restart e Variables
+Description:
+- Garantir que só o Nginx expõe portas (443).
+- Definir política de restart: always nos serviços.
+- Nenhuma senha/usuário no código, usar somente variáveis de ambiente.
+- Armazenar todas as credenciais no `.env`.
+- Adicionar `.env` ao `.gitignore`.
+
+
+⚙️ Makefile
+Title: Criar Makefile para Automatizar o Build/Up/Down
+Description:
+- Implementar Makefile com targets:
+  - make → docker-compose up --build -d
+  - make down → docker-compose down
+  - make fclean → docker system prune -af
+- O Makefile deve estar na raiz do projeto.
+- Usar variáveis e organização clara no Makefile.
+
+🧪 Testes Finais
+Title: Testar e Validar a Stack Completa
+Description:
+- Testar se o domínio login.42.fr acessa corretamente via HTTPS.
+- Verificar se o WordPress conecta ao MariaDB corretamente.
+- Testar persistência de dados em volumes após reiniciar containers.
+- Garantir que containers reiniciam automaticamente após crash.
+- Validar TLSv1.2/1.3 no navegador.
