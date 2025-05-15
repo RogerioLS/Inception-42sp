@@ -135,11 +135,10 @@ SHOW GRANTS FOR 'rog_dev'@'%';
 🔐 Teste de acesso via root (se necessário):
 docker exec -it mariadb mariadb -u root -p$MYSQL_ROOT_PASSWORD
 
+Criar Dockerfile para MariaDB baseado em Alpine ou Debian. #16
 Instalar MariaDB Server. #17
 Configurar usuário administrador e usuário normal. #18
-
 Nenhum dos usernames deve conter "admin" ou variações. #19
-
 Usar scripts de inicialização para criação do banco. #20
 Garantir que o processo rode como PID 1 (sem tail -f, sleep, etc). #21
 Utilizar variáveis de ambiente para configurações sensíveis. #22
