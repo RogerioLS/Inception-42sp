@@ -1,17 +1,51 @@
 version: '3.8'
 
 services:
+
+    nginx:
+      container_name: nginx
+      image: nginx
+      build: ./nginx
+      networks:
+        - inception-network
+      volumes:
+        - wordpress-data:/srv/www/wordpress
+      environment:
+        - CERT_PATH=/etc/nginx/ssl/ssl.crt
+        - KEY_PATH=/etc/nginx/ssl/ssl.key
+      ports:
+        - "443:443"
+      restart: on-failure
+      depends_on:
+        - mariadb
+        - wordpress
     mariadb:
-    container_name: mariadb
-    image: mariadb
-    build: ./mariadb
-    networks:
-      inception-network:
-        ipv4_address: 172.18.0.2
-    volumes:
-      - mariadb-data:/var/lib/mysql
-    environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-    restart: on-failure
+      container_name: mariadb
+      image: mariadb
+      build: ./mariadb
+      networks:
+        inception-network:
+          ipv4_address: 172.18.0.2
+      volumes:
+        - mariadb-data:/var/lib/mysql
+      environment:
+        - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+        - MYSQL_USER=${MYSQL_USER}
+        - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      restart: on-failure
+
+networks:
+  inception-network:
+    name: inception-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.18.0.0/16
+
+mariadb-data:
+    name: mariadb-data
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/roglopes/data/mariadb
