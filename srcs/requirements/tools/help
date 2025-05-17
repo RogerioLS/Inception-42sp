@@ -175,6 +175,113 @@ Description:
 - Redirecionar requisições para o PHP-FPM de WordPress (FastCGI).
 - Utilizar variáveis de ambiente para certs paths.
 
+✅ Explicação completa do porquê do NGINX neste projeto:
+
+📌 O que é o NGINX?
+NGINX é um servidor web de alto desempenho, open-source, usado amplamente para servir sites estáticos, fazer proxy reverso, balanceamento de carga, entre outros. Ele é leve, eficiente e altamente configurável — ideal para ambientes com recursos limitados como containers Docker.
+
+🎯 Por que estamos usando o NGINX nesse projeto Inception?
+Porque o WordPress, apesar de ser uma aplicação PHP, não expõe suas páginas diretamente. Ele precisa de um servidor web que:
+
+- Sirva as páginas HTML geradas.
+- Redirecione as requisições dinâmicas `.php` para o interpretador PHP-FPM.
+- Implemente HTTPS com certificados SSL.
+- Garanta performance e segurança na entrega dos conteúdos.
+
+➡️ O NGINX atua como **gateway HTTP seguro**:
+- Recebe todas as requisições.
+- Garante que **tudo seja servido por HTTPS** (sem porta 80).
+- Redireciona as requisições `.php` para o container do WordPress/PHP-FPM.
+- Gerencia certificados e segurança TLS.
+
+🧠 O que você deve entender tecnicamente:
+| Conceito                        | Explicação                                                                 |
+|--------------------------------|----------------------------------------------------------------------------|
+| Container isolado              | O NGINX roda em seu próprio container, separado do WordPress e do MariaDB.|
+| Comunicação via rede Docker    | Ele se comunica com o WordPress através da mesma rede Docker (`inception`).|
+| Certificados self-signed       | Em ambiente de desenvolvimento, usamos certificados SSL autoassinados.     |
+| HTTPS na porta 443             | Nenhum acesso via HTTP. Somente conexões HTTPS serão permitidas.           |
+| TLSv1.2/TLSv1.3                | Somente protocolos seguros serão aceitos.                                 |
+| Redirecionamento para PHP-FPM  | O NGINX age como proxy reverso para o WordPress interpretado via PHP-FPM. |
+| Variáveis de ambiente (.env)   | Os caminhos dos certificados serão configurados por variáveis no `.env`.  |
+
+---
+
+✅ 1. Checklist de Validação da Task "Implementar Serviço NGINX"
+
+📋 **Checklist Técnico e Funcional**
+
+### 🔧 Estrutura e Configuração
+- Existe um diretório `requirements/nginx` com:
+  - `Dockerfile`
+  - `conf/nginx.conf`
+  - `tools/generate_cert.sh`
+  - `tools/entrypoint.sh`
+- Existe um `.env` na pasta `srcs/` com variáveis:
+  - `CERT_PATH`
+  - `KEY_PATH`
+
+### 🐳 Dockerfile
+- A imagem base é Alpine ou Debian.
+- Instala `nginx` corretamente.
+- Copia o `nginx.conf` para o diretório apropriado (`/etc/nginx`).
+- Copia e executa `generate_cert.sh` para gerar certs self-signed.
+- Expõe a porta `443`.
+- Usa `ENTRYPOINT` com `exec` e sem hacks como `tail -f`, `sleep`, etc.
+
+### 🔒 Segurança e HTTPS
+- `nginx.conf` está configurado para escutar **apenas** na porta 443.
+- Protocolos antigos (TLS 1.0/1.1) estão desativados.
+- Apenas TLSv1.2 e TLSv1.3 estão habilitados.
+- Redirecionamento de requisições `.php` para `fastcgi_pass wordpress:9000;` está funcionando.
+- Caminhos dos certificados são definidos via variáveis de ambiente no `.env`.
+
+### 📦 Docker Compose (opcional para este passo, mas recomendável)
+- O `docker-compose.yml` define o serviço `nginx` corretamente:
+  - Monta volume com os certificados.
+  - Liga à rede `inception`.
+  - Define `depends_on: wordpress`.
+
+🧪 2. Como Testar se Está Tudo Certo
+🔌 **Passos para Testar NGINX em Container**
+
+▶️ Executar o Build (caso ainda não tenha `docker-compose`)
+```bash
+cd srcs
+docker build -t nginx_test ./requirements/nginx
+docker run --rm -it --env-file .env -p 443:443 nginx_test
+```
+
+▶️ Testar com cURL ou navegador:
+curl -k https://localhost
+# Deve retornar o conteúdo servido via NGINX (ex: página inicial do WordPress)
+
+▶️ Verificar SSL/TLS:
+openssl s_client -connect localhost:443
+# Verificar que apenas TLSv1.2 e TLSv1.3 são permitidos
+
+
+▶️ Se usar docker-compose:
+docker-compose up --build nginx
+
+🧾 Validar FastCGI e redirecionamento:
+- Acessar https://localhost deve carregar a página inicial do WordPress.
+- No nginx.conf, as requisições .php devem ser redirecionadas via fastcgi_pass wordpress:9000.
+
+📌 Subtasks associadas:
+🧩 Subtask: Criar Dockerfile para NGINX baseado em Alpine ou Debian #25
+🧩 Subtask: Instalar e Configurar o NGINX #26
+🧩 Subtask: Criar Certificados SSL/TLS Self-Signed #27
+🧩 Subtask: Configurar NGINX para escutar apenas na porta 443 com HTTPS #28
+🧩 Subtask: Permitir apenas TLSv1.2 ou TLSv1.3 no server #29
+🧩 Subtask: Redirecionar requisições para o PHP-FPM de WordPress (FastCGI) #30
+🧩 Subtask: Utilizar variáveis de ambiente para certs paths #31
+
+
+
+
+
+
 🔒 Segurança Geral
 Title: Implementar Segurança: Portas, Restart e Variables
 Description:
@@ -203,3 +310,204 @@ Description:
 - Testar persistência de dados em volumes após reiniciar containers.
 - Garantir que containers reiniciam automaticamente após crash.
 - Validar TLSv1.2/1.3 no navegador.
+
+
+
+---
+
+
+# Inception - 42sp
+
+## ✅ Objetivo Geral do Projeto
+
+Criar uma infraestrutura baseada em Docker Compose com múltiplos serviços, cada um em seu próprio container, simulando uma aplicação em produção com segurança (TLS), banco de dados e CMS (WordPress).
+
+---
+
+## 🧠 Conceitos Fundamentais
+
+| Conceito                | Justificativa                                                                 |
+|-------------------------|-------------------------------------------------------------------------------|
+| Docker/Dockerfile       | Imagens customizadas, sem usar imagens prontas de serviços.                   |
+| docker-compose          | Orquestra múltiplos containers de forma integrada e reprodutível.             |
+| Volumes                 | Persistência de dados (banco e arquivos do site).                             |
+| Rede customizada        | Comunicação segura e isolada entre containers.                                |
+| TLS/SSL (v1.2/v1.3)     | Segurança da aplicação via NGINX.                                             |
+| Ambiente isolado (VM)   | Projeto autossuficiente e reprodutível.                                       |
+| Variáveis de Ambiente   | Segurança e organização das configurações sensíveis (.env).                   |
+| Makefile                | Automatização do build e gerenciamento dos serviços.                          |
+
+---
+
+## 🔎 Regras Obrigatórias
+
+### 1. Diretório `srcs/`
+Todos os arquivos de configuração, Dockerfiles, scripts, etc., devem ficar aqui para garantir organização.
+
+### 2. Makefile na raiz
+Automatiza o build e gerenciamento dos containers.
+- Exemplo: `docker compose up --build`
+- Pode conter comandos como `docker compose down -v` para limpar volumes.
+
+### 3. Containers obrigatórios
+
+| Serviço                | Requisitos                                                                 |
+|------------------------|----------------------------------------------------------------------------|
+| NGINX                  | Único ponto de entrada (porta 443), apenas TLSv1.2/1.3.                    |
+| WordPress + php-fpm    | CMS rodando em FastCGI, sem nginx.                                         |
+| MariaDB                | Banco de dados compatível com MySQL.                                       |
+
+Obs: Cada container deve ser isolado.
+
+### 4. Volumes
+
+- Volume 1: Dados do MariaDB
+- Volume 2: Arquivos do WordPress
+
+**Motivo:** Persistência dos dados após reinício dos containers.
+
+### 5. Rede customizada
+
+Definida no `docker-compose.yml`. Não usar recursos legados como `--link` ou `network: host`.
+
+### 6. `.env` com variáveis
+
+Armazena credenciais e configurações sensíveis.
+- Deve ser ignorado pelo `.gitignore`.
+
+### 7. Proibições
+
+| Regra                                         | Motivo                                                      |
+|-----------------------------------------------|-------------------------------------------------------------|
+| Não usar latest                              | Imagens devem ser versionadas para garantir reprodutibilidade. |
+| Não usar comandos infinitos (`tail -f`, etc.) | Containers devem rodar processos legítimos no PID 1.         |
+| Não expor senhas em Dockerfiles/scripts       | Segurança — usar ENV.                                       |
+| Não usar imagens prontas                     | O projeto exige imagens a partir do Alpine ou Debian.        |
+
+### 8. Domínio
+
+Configurar domínio `seulogin.42.fr` apontando para o IP local da VM.
+
+### 9. WordPress com 2 usuários
+
+- Um usuário admin (sem usar "admin", "administrator", etc).
+- Um usuário comum.
+
+---
+
+## 📁 Estrutura Esperada
+
+```
+.
+├── Makefile
+└── srcs
+    ├── .env
+    ├── docker-compose.yml
+    ├── requirements
+    │   ├── nginx/
+    │   ├── wordpress/
+    │   ├── mariadb/
+    │   └── bonus/
+    └── tools/
+```
+
+---
+
+## 🧭 Plano de Ação — Passo a Passo
+
+1. **Preparação do Ambiente**
+   - Criar VM Linux
+   - Instalar Docker e Docker Compose
+
+2. **Estrutura de diretórios**
+   - Criar `srcs/requirements/{nginx,wordpress,mariadb}`
+
+3. **Criar `.env`**
+   ```env
+   DOMAIN_NAME=seulogin.42.fr
+   MYSQL_ROOT_PASSWORD=xxxx
+   MYSQL_USER=xxxx
+   MYSQL_PASSWORD=xxxx
+   WP_ADMIN_USER=xxxx
+   WP_ADMIN_PASS=xxxx
+   ```
+
+4. **Criar Dockerfiles**
+   - `mariadb/Dockerfile`: instala MariaDB (Alpine/Debian)
+   - `wordpress/Dockerfile`: instala php-fpm + WordPress
+   - `nginx/Dockerfile`: instala NGINX e gera certificados TLS
+
+5. **Criar `docker-compose.yml`**
+   - Usar `build:` para cada serviço
+   - Montar volumes
+   - Configurar rede customizada
+   - Definir `restart: always`
+   - Expor apenas a porta 443 no NGINX
+   - Usar `depends_on` conforme necessário
+
+6. **Automatizar com Makefile**
+   ```makefile
+   all:
+       docker compose -f srcs/docker-compose.yml --env-file srcs/.env up --build
+
+   down:
+       docker compose -f srcs/docker-compose.yml down
+
+   fclean:
+       docker system prune -af
+   ```
+
+7. **Gerar certificados TLS**
+   - Usar `openssl` para criar `.key` e `.crt` em `tools/nginx`
+   - Montar volume para o NGINX acessar os certificados
+
+8. **Configurar `/etc/hosts`**
+   ```
+   127.0.0.1    seu_login.42.fr
+   ```
+
+---
+
+## ⚙️ Makefile
+
+- Implementar Makefile com targets:
+  - `make` → `docker-compose up --build -d`
+  - `make down` → `docker-compose down`
+  - `make fclean` → `docker system prune -af`
+- O Makefile deve estar na raiz do projeto.
+- Usar variáveis e organização clara no Makefile.
+
+---
+
+## 🧪 Testes Finais
+
+- Testar se o domínio `login.42.fr` acessa corretamente via HTTPS.
+- Verificar se o WordPress conecta ao MariaDB corretamente.
+- Testar persistência de dados em volumes após reiniciar containers.
+- Garantir que containers reiniciam automaticamente após crash.
+- Validar TLSv1.2/1.3 no navegador.
+
+---
+
+## 📚 Fontes de Estudo
+
+- [Docker Compose](https://docs.docker.com/compose/)
+- [Dockerfile Best Practices](https://docs.docker.com/develop/develop-images/dockerfile_best-practices/)
+- [WordPress + MariaDB via Docker](https://developer.wordpress.org)
+- [TLS via OpenSSL](https://wiki.openssl.org/index.php/Command_Line_Utilities)
+- [PID 1 & ENTRYPOINT](https://0pointer.de/blog/projects/container.html)
+- [Como criar Makefile](https://opensource.com/article/19/8/what-how-makefile)
+
+---
+
+## 📝 Resumo (TL;DR)
+
+O projeto Inception consiste em montar uma infraestrutura com 3 containers: NGINX + TLS, WordPress + php-fpm e MariaDB, cada um com sua própria imagem baseada em Alpine ou Debian.  
+Os dados devem ser persistidos em volumes.  
+As credenciais ficam no `.env` (ignorado pelo Git).  
+A comunicação entre containers é feita por uma rede Docker customizada.  
+A entrada é exclusivamente pelo NGINX na porta 443, com TLSv1.2 ou 1.3.  
+Não pode usar loops infinitos nos containers.  
+O Makefile deve construir toda a stack.
+
+---
