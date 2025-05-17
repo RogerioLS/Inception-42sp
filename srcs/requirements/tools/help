@@ -164,6 +164,90 @@ Description:
 - Utilizar variáveis de ambiente para configuração de acesso ao banco.
 - Persistir os arquivos de WordPress no volume correto.
 
+✅ Explicação completa do porquê do WordPress neste projeto:
+
+📌 O que é o WordPress?
+O WordPress é um CMS (Content Management System) amplamente utilizado para criação de sites e blogs. Ele é escrito em PHP e utiliza um banco de dados (como MariaDB) para armazenar seus conteúdos dinâmicos, como posts, usuários, páginas e configurações.
+
+🎯 Por que estamos usando o WordPress neste projeto Inception?
+Porque é o principal serviço da stack: o objetivo final do projeto é entregar um ambiente onde o WordPress esteja funcionando com segurança, performance e isolamento em containers.
+
+➡️ O WordPress é a aplicação principal, que depende do MariaDB (para persistência de dados) e do NGINX + PHP-FPM (para servir conteúdo via web).
+
+🧠 O que você deve entender tecnicamente:
+
+| Conceito                      | Explicação                                                                                     |
+|------------------------------|------------------------------------------------------------------------------------------------|
+| Container isolado            | O WordPress roda em seu próprio container, separado do NGINX e do MariaDB.                    |
+| PHP-FPM                      | O WordPress não tem servidor embutido. Ele é processado pelo PHP-FPM, que serve o conteúdo PHP.|
+| Comunicação com MariaDB      | O WordPress se conecta ao banco através de variáveis de ambiente (host, user, password, etc.). |
+| Instalação manual            | O WordPress é baixado manualmente no Dockerfile e instalado diretamente na imagem.             |
+| Configuração por volume      | Os arquivos do WordPress são persistidos em volume (`/var/www/html`) para garantir persistência.|
+| Variáveis de ambiente        | Definidas no `.env`, são usadas para configurar o acesso ao banco e inicializar a aplicação.   |
+| Arquivo `wp-config.php`      | Esse arquivo de configuração deve ser ajustado dinamicamente para consumir as variáveis do `.env`. |
+
+---
+
+✅ 1. Checklist de Validação da Task "Implementar Serviço WordPress"
+
+📋 **Checklist Técnico e Funcional**
+
+### 🔧 Estrutura e Configuração
+- Existe um diretório `requirements/wordpress` com:
+  - `Dockerfile`
+  - Script de configuração (como `setup.sh`, se necessário)
+  - Diretório `wordpress/` com arquivos persistidos
+
+### 🐳 Dockerfile
+- Baseado em Alpine ou Debian (Debian geralmente para melhor compatibilidade com PHP).
+- Instala pacotes obrigatórios:
+  - `php`, `php-fpm`, `php-mysqli`, `php-exif`, `php-gd`, `php-curl`, `php-xml`, `php-mbstring` etc.
+- Faz download e extração do WordPress (versão estável).
+- Copia ou gera um `wp-config.php` com uso de variáveis de ambiente.
+- Expõe a porta `9000` (PHP-FPM).
+- Usa `ENTRYPOINT` com `exec php-fpm7.4 -F` (ou equivalente), sem `tail -f` ou `sleep`.
+
+### 🔌 Integração com MariaDB
+- Conexão ao banco deve usar variáveis como `MYSQL_HOST`, `MYSQL_USER`, `MYSQL_PASSWORD`, `MYSQL_DATABASE`.
+- O container deve esperar pelo banco antes de tentar se conectar (use `wait-for-it.sh` se necessário).
+
+### 💾 Persistência
+- O volume `/var/www/html` está montado para armazenar os arquivos do WordPress.
+- Os dados não devem ser apagados em rebuild do container.
+
+### 📦 Docker Compose
+- O serviço `wordpress` está definido no `docker-compose.yml`.
+- Conecta-se à rede `inception`.
+- Depende dos containers `nginx` e `mariadb`.
+
+---
+
+🧩 Subtasks Relacionadas:
+
+| Subtask                                                                                 | Status |
+|------------------------------------------------------------------------------------------|--------|
+| Criar Dockerfile baseado em Alpine ou Debian.                                            | 🔧     |
+| Instalar PHP, PHP-FPM e extensões necessárias (php-mysqli, php-curl, etc).              | 🔧     |
+| Instalar WordPress manualmente na imagem.                                                | 🔧     |
+| Configurar PHP-FPM corretamente para servir o WordPress.                                | 🔧     |
+| WordPress deve apontar para o container MariaDB via variáveis do `.env`.                | 🔧     |
+| Utilizar variáveis de ambiente para configuração de acesso ao banco no `wp-config.php`. | 🔧     |
+| Persistir os arquivos do WordPress no volume correto (`/var/www/html`).                 | 🔧     |
+
+---
+
+Se quiser, posso te ajudar a transformar cada bloco desses em issues automaticamente com um script usando a GitHub API, ou gerar um template .md para importar direto. Deseja isso?
+
+
+
+
+
+
+
+
+
+
+
 🌐 Serviço NGINX
 Title: Implementar Serviço NGINX com HTTPS (TLSv1.2 ou TLSv1.3)
 Description:
