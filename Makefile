@@ -68,7 +68,11 @@ checkdatadir:
     fi
 
 changehostname:
-	@ sed -i -E 's/^127\.0\.0\.1\s+localhost\b.*/127.0.0.1 $(HOSTNAME)/' /etc/hosts
+	@if [ "$$EUID" -ne 0 ]; then \
+		echo "⚠️  Você precisa ser root para alterar o /etc/hosts. Pule essa etapa ou altere manualmente."; \
+	else \
+		sed -i -E 's/^127\.0\.0\.1\s+localhost\b.*/127.0.0.1 $(HOSTNAME)/' /etc/hosts; \
+	fi
 
 help:
 	@ cat $(DOCKER_HELP_PATH)
