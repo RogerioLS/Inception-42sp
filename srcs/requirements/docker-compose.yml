@@ -75,10 +75,10 @@ volumes:
       type: none
       device: /home/roglopes/data/wordpress
 
-mariadb-data:
-  name: mariadb-data
-  driver: local
-  driver_opts:
-    o: bind
-    type: none
-    device: /home/roglopes/data/mariadb
+  mariadb-data:
+    name: mariadb-data
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: /home/roglopes/data/mariadb
