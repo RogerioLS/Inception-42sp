@@ -19,7 +19,7 @@ fi
 
 if ! wp core is-installed --allow-root; then
   echo "Installing wp core.";
-  wp core install --url=$WORDPRESS_HOSTNAME --title="Pmelo-ca's Inception" --admin_user=$WORDPRESS_USER --admin_password=$WORDPRESS_PASSWORD --admin_email=$WORDPRESS_EMAIL --allow-root; 
+  wp core install --url=$WORDPRESS_HOSTNAME --title="Roglope's Inception" --admin_user=$WORDPRESS_USER --admin_password=$WORDPRESS_PASSWORD --admin_email=$WORDPRESS_EMAIL --allow-root; 
 
   if wp core is-installed --allow-root; then
     echo "Wp core installed succefully.";
