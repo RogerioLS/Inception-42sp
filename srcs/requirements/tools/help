@@ -38,6 +38,72 @@ Description:
 - Garantir que containers usam apenas a network especificada.
 - Definir políticas de restart: always.
 
+
+✅ Explicação completa sobre a configuração do Docker Compose neste projeto:
+
+📌 O que é o Docker Compose?
+Docker Compose é uma ferramenta que permite definir e gerenciar múltiplos containers Docker como uma única aplicação. Através de um arquivo `docker-compose.yml`, é possível especificar serviços, redes, volumes e políticas de restart de forma declarativa e reprodutível.
+
+🎯 Por que usamos Docker Compose no projeto Inception?
+Para facilitar a orquestração dos serviços do projeto (Nginx, WordPress e MariaDB), garantindo isolamento, persistência de dados, rede customizada e comportamento consistente em reinicializações.
+
+---
+
+🧠 O que foi implementado tecnicamente:
+
+| Conceito                     | Explicação |
+|-----------------------------|------------|
+| Network customizada         | Criamos uma rede chamada `inception-network` com driver `bridge` e IP fixo para permitir comunicação segura e isolada entre os containers. |
+| Volume para MariaDB         | Volume `mariadb-data` criado com bind mount para `/home/roglopes/data/mariadb`, garantindo persistência dos dados mesmo após reinicialização do container. |
+| Volume para WordPress       | Volume `wordpress-data` com bind mount para `/home/roglopes/data/wordpress`, assegurando que uploads, temas e configurações persistam. |
+| Isolamento de containers    | Todos os serviços utilizam apenas a `inception-network`, sem expor containers desnecessariamente para outras redes. |
+| Políticas de restart        | Todos os serviços possuem a política `restart: always`, garantindo que sejam reiniciados automaticamente em caso de falhas ou reboot do sistema. |
+
+---
+
+✅ 1. Checklist de Validação da Task "Docker Compose - Redes e Volumes"
+
+📋 **Checklist Técnico e Funcional**
+
+### 📦 docker-compose.yml
+- Define os serviços: `nginx`, `wordpress`, `mariadb`.
+- Cada serviço está conectado somente à `inception-network`.
+- Contém política de `restart: always` para cada container.
+
+### 🔌 Rede personalizada
+- `inception-network` criada com:
+  - Driver: `bridge`
+  - IPAM configurado com subnet `172.18.0.0/16`
+  - IP fixo para cada container, garantindo previsibilidade de comunicação.
+
+### 💾 Volumes de persistência
+- `mariadb-data` mapeado para `/home/roglopes/data/mariadb`
+- `wordpress-data` mapeado para `/home/roglopes/data/wordpress`
+- Volumes são do tipo bind mount, permitindo fácil acesso aos dados persistidos no host.
+
+### 🔐 Isolamento e segurança
+- Nenhum container utiliza a rede default.
+- Comunicação é feita apenas via rede `inception-network`.
+
+---
+
+🧩 Subtasks Relacionadas:
+
+| ID  | Descrição                                                                |
+|-----|-------------------------------------------------------------------------|
+| #7  | Configurar Docker Compose (Redes e Volumes)                             |
+| #32 | Criar volume persistente para MariaDB                                   |
+| #33 | Criar volume persistente para arquivos do WordPress                     |
+| #34 | Criar rede customizada e associar corretamente os serviços              |
+| #35 | Garantir que os containers usam apenas a rede especificada              |
+| #36 | Definir políticas de restart para os serviços como `restart: always`    |
+
+
+
+
+
+
+
 🛢️ Serviço MariaDB
 Title: Implementar Serviço MariaDB
 
