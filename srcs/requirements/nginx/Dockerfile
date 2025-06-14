@@ -11,7 +11,7 @@ RUN mkdir -p /etc/nginx/ssl && \
     openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
     -keyout /etc/nginx/ssl/ssl.key \
     -out /etc/nginx/ssl/ssl.crt \
-    -subj "/C=BR/ST=SP/L=SP/O=42/OU=42/CN=roglopes.42.fr"  
+    -subj "/C=BR/ST=SP/L=SP/O=42/OU=42/CN=roglopes.42.fr"
 
 EXPOSE 443
 
