@@ -1,6 +1,0 @@
--> Permissao de clone explicar a complicacao que si tem;
--> Depois entrar como sudo
-	- sudo make;
-	- senha user42
-	- make services -> para ver os servicos rodando;
--> 
