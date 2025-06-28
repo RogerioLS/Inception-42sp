@@ -56,16 +56,16 @@ iterative:
 
 checkdatadir:
 	@ if [ ! -d "$(DATA_DIR)" ]; then \
-        mkdir -p $(DATA_DIR); \
-    fi
+		mkdir -p $(DATA_DIR); \
+	fi
 
 	@ if [ ! -d "$(DATA_DIR_WORDPRESS)" ]; then \
-        mkdir -p $(DATA_DIR_WORDPRESS); \
-    fi
+		mkdir -p $(DATA_DIR_WORDPRESS); \
+	fi
 
 	@ if [ ! -d "$(DATA_DIR_MARIADB)" ]; then \
-        mkdir -p $(DATA_DIR_MARIADB); \
-    fi
+		mkdir -p $(DATA_DIR_MARIADB); \
+	fi
 
 changehostname:
 	@if [ "$$EUID" -ne 0 ]; then \
@@ -75,22 +75,22 @@ changehostname:
 	fi
 
 mariadb-login:
-    @echo "Passo a passo para acessar o MariaDB no container:"
-    @echo "1. Liste os containers em execução:"
-    @echo "   docker ps"
-    @echo "2. Encontre o CONTAINER ID ou NAMES do container MariaDB."
-    @echo "3. Acesse o container com o comando:"
-    @echo "   make iterative <ID container>
-    @echo "4. Dentro do container, acesse o MariaDB CLI com o comando:"
-    @echo "   mariadb -u rog_dev -p "
-    @echo "5. Escolha o banco de dados com o comando:"
-    @echo "   USE WordPress;"
+	@echo "Passo a passo para acessar o MariaDB no container:"
+	@echo "1. Liste os containers em execução:"
+	@echo "docker ps"
+	@echo "2. Encontre o CONTAINER ID ou NAMES do container MariaDB."
+	@echo "3. Acesse o container com o comando:"
+	@echo "   make iterative <ID container>
+	@echo "4. Dentro do container, acesse o MariaDB CLI com o comando:"
+	@echo "   mariadb -u rog_dev -p "
+	@echo "5. Escolha o banco de dados com o comando:"
+	@echo "   USE WordPress;"
 	@echo "6. Ixibir as tabelas disponíveis com o comando:"
 	@echo "   SHOW TABLES;"
-    @echo "7. Execute suas queries SQL."
+	@echo "7. Execute suas queries SQL."
 	@echo "   Exemplo: SELECT * FROM wp_users;"
-    @echo "8. Para sair do MariaDB CLI, digite:"
-    @echo "   quit"
+	@echo "8. Para sair do MariaDB CLI, digite:"
+	@echo "   quit"
 
 wordpress-login:
 	@echo "Passo a passo para acessar o WordPress no container:"
@@ -100,6 +100,6 @@ wordpress-login:
 	@echo "   Senha: 83!dsaA@3f   "
 
 help:
-	@ cat $(DOCKER_HELP_PATH)
+	@cat $(DOCKER_HELP_PATH)
 
 .PHONY: up build start down stop restart services logs startservice startserviceiter downservice restartservice resetdocker execiterative checkdatadir changehostname mariadb-login help
