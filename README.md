@@ -298,12 +298,12 @@ In addition, it is possible to separate the web server and PHP by establishing a
   1. Clone the Project folder:
 
       ```
-       git clone https://github.com/Xperaz/inception.git
+       git clone https://github.com/RogerioLS/Inception-42sp.git
      ```
   2. accede to the folder:
 
      ```
-       cd inception
+       cd Inception-42sp
      ```
 
   3. Build the images and deploy the infrastructure:
